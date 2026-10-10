@@ -55,10 +55,10 @@ make -C tutor test
 在 `config.txt` 中填写自己的学号，例如：
 
 ```text
-student_id = 24307130175
+student_id = 243xxxx0175
 ```
 
-这里是助教演示账号，请替换成自己的学号。学号为 11 位数字或英文字母；含字母的学号直接填写，保留大小写和前导零，不要转成数字。
+这里只是示例，请替换成自己的学号。学号为 11 位数字或英文字母；含字母的学号直接填写，保留大小写和前导零，不要转成数字。
 
 在仓库根目录执行：
 
@@ -291,7 +291,7 @@ python3 public_test.py --secret
 如果仍然失败，可以在浏览器中打开 [炸弹下载页面](https://github.com/ICS-26Fall-FDU/BombLab/releases/tag/bombs)，下载自己的 `bomb-<学号>.tar.gz`，再导入：
 
 ```sh
-python3 fetch_bomb.py --file bomb-24307130175.tar.gz
+python3 fetch_bomb.py --file bomb-243xxxx0175.tar.gz
 make
 ```
 
