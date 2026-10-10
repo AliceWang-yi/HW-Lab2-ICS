@@ -128,6 +128,8 @@ int solve_phase_1(uint64_t challenge, char *out, size_t cap);
 
 正式六关的口令是一行用空格分隔的无符号十进制整数。`out` 中不要加换行，驱动程序会自动添加；调试信息写到 stderr，写到 stdout 会混入口令。
 
+模板中的 `defuser.c` 已经写好每关的框架：把算出的整数依次存入 `values`，把 `count` 改为整数个数，`write_answer` 会按上述格式写入 `out` 并检查截断。需要填写的位置都标有 `// TODO`；`count` 为 0 时视为尚未实现。
+
 **示例：从汇编到求解函数。**下面以 tutor 教学为例（不计分，`tutor/` 中有完整源码），演示从汇编到求解函数的过程。在 `phase_00` 中，challenge 先被保存到 `rbx`，读入两个整数后有这样几行：
 
 ```text
@@ -159,7 +161,7 @@ int solve_phase_0(uint64_t challenge, char *out, size_t cap) {
 }
 ```
 
-最后一行检查 `snprintf` 是否出错或被截断。正式关卡也一样：要恢复出对任意 challenge 都成立的计算关系，而不是记下某一次运行时比较的值。
+最后一行检查 `snprintf` 是否出错或被截断；正式关卡中这一步由模板里的 `write_answer` 完成。正式关卡也一样：要恢复出对任意 challenge 都成立的计算关系，而不是记下某一次运行时比较的值。
 
 注意汇编中的运算宽度。32 位无符号加、减、乘会按模 2³² 回绕；不要将它们恢复成无限精度计算，也不要依赖 C 的有符号溢出。
 
