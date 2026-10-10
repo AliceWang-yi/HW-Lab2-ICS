@@ -97,7 +97,7 @@ git add -f bomb
 | `public_test.py`、`tests/public.json` | 公开测试程序和 seed，包括正式六关和选做隐藏关 |
 | `.github/workflows/public-tests.yml` | GitHub Actions 公开自测工作流 |
 
-## 实验要求
+## 实验内容
 
 ### 正式六关
 
@@ -127,6 +127,39 @@ int solve_phase_1(uint64_t challenge, char *out, size_t cap);
 根据 challenge 算出口令，写入 `out`；字符串连同结尾的 `\0` 不能超过 `cap` 字节。成功时返回 0，尚未实现或发生错误时返回非零。
 
 正式六关的口令是一行用空格分隔的无符号十进制整数。`out` 中不要加换行，驱动程序会自动添加；调试信息写到 stderr，写到 stdout 会混入口令。
+
+**示例：从汇编到求解函数。**下面以 tutor 教学为例（不计分，`tutor/` 中有完整源码），演示从汇编到求解函数的过程。在 `phase_00` 中，challenge 先被保存到 `rbx`，读入两个整数后有这样几行：
+
+```text
+shr    $0x5,%rbx            # challenge 右移 5 位
+movzbl %bl,%edi             # 只保留低 8 位，相当于 & 255
+xor    $0x2a,%edi           # 异或 42，得到第一个数
+cmp    %edi,-0x20(%rbp)     # 与输入的第一个整数比较
+...
+call   tutorial_mix         # 以第一个数为参数
+cmp    %eax,-0x1c(%rbp)     # 返回值与输入的第二个整数比较
+```
+
+`tutorial_mix` 只有一条 `lea 0x7(%rdi,%rdi,2),%eax`，即 `x + 2x + 7`。所以口令的两个数是：
+
+- 第一个数：`((challenge >> 5) & 255) ^ 42`
+- 第二个数：`3 * 第一个数 + 7`
+
+写成求解函数，也就是 `tutor/phase0_solution.c`：
+
+```c
+#include <inttypes.h>
+#include <stdio.h>
+
+int solve_phase_0(uint64_t challenge, char *out, size_t cap) {
+    uint32_t first = (uint32_t)((challenge >> 5) & UINT64_C(255)) ^ UINT32_C(42);
+    uint32_t second = first * UINT32_C(3) + UINT32_C(7);
+    int size = snprintf(out, cap, "%" PRIu32 " %" PRIu32, first, second);
+    return size < 0 || (size_t)size >= cap;
+}
+```
+
+最后一行检查 `snprintf` 是否出错或被截断。正式关卡也一样：要恢复出对任意 challenge 都成立的计算关系，而不是记下某一次运行时比较的值。
 
 注意汇编中的运算宽度。32 位无符号加、减、乘会按模 2³² 回绕；不要将它们恢复成无限精度计算，也不要依赖 C 的有符号溢出。
 
