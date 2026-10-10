@@ -34,7 +34,7 @@ info registers
 | `04_recursion.c` | 基例、递归调用、调用栈 | P4 |
 | `05_linked_list.c` | 结构体偏移、next 指针、NULL | P5 |
 | `06_indirect_call.c` | 函数指针表、间接 call | P6 |
-| `07_stack_copy.c` | 局部对象布局、相邻字段覆盖 | secret |
+| `07_stack_copy.c` | 局部对象布局、相邻字段覆盖 | 隐藏关 |
 
 每个程序都可以先用 `objdump -d --no-show-raw-insn PROGRAM` 静态观察，再用 GDB 动态验证。教学例子中的地址和常量不对应任何正式 Bomb；正式题必须以自己的 binary 为准。
 

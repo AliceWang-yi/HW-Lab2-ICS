@@ -17,7 +17,7 @@ __attribute__((noinline)) uint32_t copy_demo(const char *source, size_t length) 
 }
 
 int main(void) {
-    static const char payload[] = "AAAAAAAAAAAAAAAAOPEN";
+    static const char payload[] = "AAAAAAAAAAAAAAAADEMO";
     printf("scratch=%zu marker=%zu answer=%zu marker_value=%" PRIu32 "\n",
            offsetof(struct Frame, scratch), offsetof(struct Frame, marker),
            offsetof(struct Frame, answer), copy_demo(payload, sizeof(payload) - 1));

@@ -246,9 +246,36 @@ Actions 只检查公开测试，不是最终成绩。助教会使用保存的个
 
 ### 隐藏关（选做）
 
-六关完成后，炸弹在通过管道或文件接收口令时，还会尝试读取第七行；在终端中手动输入六行不会自动进入隐藏关。
+一次运行全部六关（不带 `--phase`），并且口令来自管道或文件时，炸弹在六关通过后还会读取第七行；没有第七行时正常结束。在终端或 GDB 中手动输入六行，都不会进入隐藏关。
 
-可以从 `secret_gate`、`secret_copy` 和 `secret_phase` 开始分析。求解接口是 `defuser.h` 中的 `solve_secret`，除了 challenge，还会收到由前六行口令得到的 context。入口和校验方式需要自己观察，不要求覆盖返回地址，也不需要 shellcode。
+求解接口是 `defuser.h` 中的：
+
+```c
+int solve_secret(uint64_t challenge, uint64_t context, char *out, size_t cap);
+```
+
+`challenge` 是隐藏关的 challenge，`context` 由前六行口令得到。`./defuser --secret` 会先调用六个正式关卡的求解函数计算 `context`，六关未完成时会直接报错。`solve_secret` 写出完整的第七行，不受正式六关“只含十进制整数”的格式限制，但仍须是一行 ASCII 文本，不包含换行。
+
+可以从 `secret_gate`、`secret_copy` 和 `secret_phase` 开始分析。入口和校验方式需要自己观察，不要求覆盖返回地址，也不需要 shellcode。
+
+> **调试提示：用文件输入进入隐藏关。** 先用已完成的六关生成前六行，再追加一行试探输入：
+>
+> ```sh
+> ./defuser --seed 42 > secret.txt
+> echo 'test' >> secret.txt
+> gdb ./bomb
+> ```
+>
+> 在 GDB 中重定向输入，参数要完整写出：
+>
+> ```text
+> (gdb) break *secret_gate
+> (gdb) run --seed 42 < secret.txt
+> ```
+>
+> 隐藏关的 challenge 不会打印，可以在 `secret_gate` 入口按调用约定查看参数寄存器。
+
+> **可参考的仓库材料。** [`teaching/07_stack_copy.c`](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/07_stack_copy.c) 演示同一个结构体内的相邻字段覆盖，可以先对照它观察局部对象的布局；[各关调试线索](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/docs/gdb-phases.md) 末尾的“隐藏关（选做）”给出了观察方向。
 
 完成后验证：
 
@@ -258,7 +285,9 @@ make
 python3 secret_public_test.py
 ```
 
-只有输出 `Secret phase defused.` 才算隐藏关通过。隐藏关测试要求同一个 seed 下的前六行口令全部正确；`prerequisite_` 错误表示前六关尚未通过，不是隐藏关答案本身的错误。
+只有输出 `Secret phase defused.` 才算隐藏关通过；公开测试全部通过时显示 `Secret public tests: 10/10 (optional)`。
+
+公开测试和评分都要求同一个 seed 下的前六关正确。`prerequisite_` 开头的错误表示前六关在该 seed 下尚未通过，不是隐藏关答案本身的错误；评分时某个隐藏 seed 下任一正式关卡出错，该 seed 的隐藏关也不得分。
 
 ## 常见问题
 

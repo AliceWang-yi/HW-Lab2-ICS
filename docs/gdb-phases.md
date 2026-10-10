@@ -82,8 +82,8 @@ python3 public_test.py --phase 5
 ./defuser --seed 987654321 | ./bomb --seed 987654321
 ```
 
-## 可选秘密关
-
-完成六关后，若继续分析 binary，可以检查 `secret_gate` 和 `secret_phase`。秘密入口通过六关后的额外一行 payload 触发；先用 GDB 观察 `secret_gate` 的局部对象和 `secret_copy` 的写入范围，再把填充、解锁标志和 `secret_phase` 的三个输出字段写入 `solve_secret()`。三个字段由第七关 challenge 和六行答案派生的 transcript context 共同决定。秘密 payload 通过 `./defuser --secret --seed 42` 由代码生成，不能代替六关的六行输出。
-
 单关通过后换 seed 验证。所有关完成后，最后一条命令应依次显示六次 `defused` 和最终成功提示。
+
+## 隐藏关（选做）
+
+完成六关后，若继续分析 binary，可以检查 `secret_gate`、`secret_copy` 和 `secret_phase`。隐藏关由六关之后的第七行输入触发，调试时用文件输入，例如 `run --seed 42 < secret.txt`。先用 GDB 观察 `secret_gate` 的局部对象和 `secret_copy` 的写入范围，再把填充、解锁标志和 `secret_phase` 的三个输出字段写入 `solve_secret()`。三个字段由隐藏关的 challenge 和前六行口令得到的 context 共同决定。第七行通过 `./defuser --secret --seed 42` 由代码生成，不能代替六关的六行输出。
