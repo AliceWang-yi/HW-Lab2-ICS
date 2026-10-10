@@ -629,4 +629,4 @@ git push -f origin final
 - 知乎专栏文章（延伸阅读）：<https://zhuanlan.zhihu.com/p/1961833750619988266>
 - `objdump` 手册：在终端运行 `man objdump`。
 
-本实验说明的组织方式参考了本课程的 DataLab 文档。感谢课程助教团队，以及上述资料的作者与维护者。
+感谢课程助教团队，以及上述资料的作者与维护者。
