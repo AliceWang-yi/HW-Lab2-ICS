@@ -1,0 +1,52 @@
+#include "defuser.h"
+
+int solve_phase_1(uint64_t challenge, char *out, size_t cap) {
+    (void)challenge;
+    (void)out;
+    (void)cap;
+    return 1;
+}
+
+int solve_phase_2(uint64_t challenge, char *out, size_t cap) {
+    (void)challenge;
+    (void)out;
+    (void)cap;
+    /* Replace this body with the relation recovered from your phase_02. */
+    return 1;
+}
+
+int solve_phase_3(uint64_t challenge, char *out, size_t cap) {
+    (void)challenge;
+    (void)out;
+    (void)cap;
+    return 1;
+}
+
+int solve_phase_4(uint64_t challenge, char *out, size_t cap) {
+    (void)challenge;
+    (void)out;
+    (void)cap;
+    return 1;
+}
+
+int solve_phase_5(uint64_t challenge, char *out, size_t cap) {
+    (void)challenge;
+    (void)out;
+    (void)cap;
+    return 1;
+}
+
+int solve_phase_6(uint64_t challenge, char *out, size_t cap) {
+    (void)challenge;
+    (void)out;
+    (void)cap;
+    return 1;
+}
+
+int solve_secret(uint64_t challenge, uint64_t context, char *out, size_t cap) {
+    (void)challenge;
+    (void)context;
+    (void)out;
+    (void)cap;
+    return 1;
+}
