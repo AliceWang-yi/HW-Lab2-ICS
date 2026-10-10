@@ -36,9 +36,18 @@ sudo apt-get update
 sudo apt-get install gcc make python3 gdb binutils
 ```
 
+在服务器上以 root 用户登录时（`whoami` 输出 `root`，命令提示符以 `#` 结尾），不需要 `sudo`，直接执行：
+
+```sh
+apt-get update
+apt-get install -y gcc make python3 gdb binutils
+```
+
+root 权限只用于安装软件；克隆仓库、编译和调试都不需要 root。没有 root 或 sudo 权限时，先用 `gcc --version`、`gdb --version`、`objdump --version` 和 `python3 --version` 检查是否已经安装，其中 Python 需要 3.10 或更高版本；缺少时联系服务器管理员。
+
 本实验的炸弹是 64 位 Linux 程序，不需要 DataLab 使用的 32 位编译环境，也不能直接在 Windows、macOS 或 ARM Linux 上运行。可以用 `uname -sm` 检查环境；本实验需要的输出是 `Linux x86_64`。
 
-### 先完成调试教程
+### 先完成 tutor 教学
 
 `tutor/` 是独立的 tutor 教学，提供源码和参考解法，不计分，也不需要填写学号或下载个人炸弹。
 
@@ -167,98 +176,176 @@ int solve_phase_0(uint64_t challenge, char *out, size_t cap) {
 
 解法只应完成计算。可以使用 `snprintf` 等向内存缓冲区写入结果的函数，但不要读写文件、访问网络、创建进程、调用外部程序或使用内联汇编。正式评分会检查禁用调用，并在隔离环境中编译和运行。
 
-## 调试与测试
+## 实验引导
 
-### 固定输入，观察程序
+### GDB 教学
 
-以第 1 关为例：
+GDB 是 GNU 调试器。本实验用它让炸弹停在某条指令之前，查看此刻的寄存器和内存，验证从汇编中读出的推测。下面的命令以第 1 关为例，[tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中有一次完整的演练。
 
-```sh
-./bomb --seed 42 --phase 1
-```
+GDB 命令大多可以缩写，例如 `break` 写作 `b`、`continue` 写作 `c`；直接按回车会重复上一条命令，连续单步时很方便。忘记用法时，在 GDB 中执行 `help 命令名`。
 
-程序显示 challenge 和口令格式，然后等待输入。`--phase 1` 表示只运行第 1 关；省略这个参数则依次运行六关。
-
-seed 用来生成各关的 challenge。同一个 seed 和关卡对应同一个 challenge，适合反复调试；换 seed 可以检查另一组输入。分析时先固定 seed，不要每次运行都换。
-
-### 查看汇编并设置断点
-
-先导出第 1 关的汇编：
-
-```sh
-objdump -d --disassemble=phase_01 ./bomb > phase_01.S
-```
-
-再用 GDB 运行：
+#### 启动与退出
 
 ```sh
 gdb --args ./bomb --seed 42 --phase 1
 ```
 
-在 GDB 中执行：
-
-```text
-(gdb) break *phase_01
-(gdb) run
-```
-
-等待口令时，可以输入数量正确的占位整数，例如第 1 关输入 `0`。即使答案不正确，也能在进入关卡函数时停下观察，不必先猜中答案。
-
-先找函数调用、分支、循环和返回的位置，再分析关键指令。如果关卡调用了其他函数，还需要查看被调用函数的行为，不要只读入口函数。
-
-各关入口函数名是 `phase_01` 至 `phase_06`。导出的汇编适合看清调用、分支和循环的整体结构，在线 GDB 适合确认某一时刻寄存器和内存中的值；两种方式在 [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中都有完整示范。工具操作不熟练时，先回到 tutor 教学和 C 小例子；常用命令见下一节“GDB 速成”。
-
-### GDB 速成
-
-GDB 命令大多可以缩写，例如 `break` 写作 `b`、`continue` 写作 `c`；直接按回车会重复上一条命令，连续单步时很方便。
-
-**启动与运行**
+`--args` 把后面的内容都当作被调试程序的参数。此时程序还没有开始运行，先设好断点，再用 `run` 启动。
 
 | 命令 | 作用 |
 | --- | --- |
-| `gdb --args ./bomb --seed 42 --phase 1` | 带参数启动 GDB，此时程序还没有运行 |
-| `run` | 开始运行，遇到断点时停下 |
-| `run --seed 42 --phase 1 < input.txt` | 从文件读取口令；带重定向时要把参数写完整 |
-| `kill` | 结束这一次运行，断点保留 |
+| `run` | 开始运行，遇到断点时停下；程序等待输入时，直接在 GDB 所在的终端里输入口令 |
+| `run --seed 42 --phase 1 < input.txt` | 重新指定参数，并从文件读取口令；带重定向时要把参数写完整 |
+| `kill` | 结束这一次运行，断点保留，可以再次 `run` |
 | `quit` | 退出 GDB |
+| `set pagination off` | 关闭分页，输出较长时不再停下等待回车 |
 
-**断点**
+在部分容器中启动时会提示 `Error disabling address space randomization: Operation not permitted`，不影响本实验，可以忽略。
+
+#### 断点
 
 | 命令 | 作用 |
 | --- | --- |
 | `break *phase_01` | 在函数的第一条指令停下 |
 | `break *0x401234` | 在指定地址停下，地址从自己炸弹的反汇编中读取 |
+| `tbreak *0x401234` | 只生效一次的断点 |
 | `info breakpoints` | 列出所有断点及编号 |
+| `disable 2` / `enable 2` | 暂时关闭 / 重新打开 2 号断点 |
 | `delete 2` | 删除 2 号断点；不带编号则删除全部断点 |
 | `continue` | 继续运行到下一个断点 |
 
-**单步执行**
+注意 `*`：`break *phase_01` 停在函数的第一条指令；不带 `*` 的 `break phase_01` 会跳过函数开头保存寄存器、建立栈帧的几条指令，停下时栈已经变化。观察参数时使用带 `*` 的写法。
+
+#### 单步执行
 
 | 命令 | 作用 |
 | --- | --- |
 | `si` | 执行一条指令，遇到 `call` 时进入被调用函数 |
 | `ni` | 执行一条指令，遇到 `call` 时把整个调用执行完 |
+| `si 5` / `ni 5` | 连续执行 5 条指令 |
+| `advance *0x401234` | 一直运行到指定地址，常用于跳过一段循环 |
 | `finish` | 运行到当前函数返回，之后用 `p/u $eax` 查看返回值 |
-| `display/i $pc` | 之后每次停下都显示下一条要执行的指令 |
 
-**查看寄存器和内存**
+炸弹没有调试信息，`step`、`next` 无法按源码行执行：在关卡函数中执行 `next` 会一直运行到函数返回。请使用 `si`、`ni`。
+
+#### 查看汇编
 
 | 命令 | 作用 |
 | --- | --- |
 | `disassemble` | 查看当前函数的汇编，`=>` 标出下一条要执行的指令 |
-| `info registers rdi rsi` | 查看指定寄存器；不带参数则显示全部 |
-| `p/x $rsi` | 以十六进制打印；`p/u`、`p/d` 分别按无符号、有符号十进制打印 |
+| `disassemble phase_01` | 查看指定函数的汇编 |
+| `x/10i $pc` | 从当前位置起显示 10 条指令 |
+| `display/i $pc` | 之后每次停下都自动显示下一条要执行的指令 |
+
+GDB 和 `objdump` 默认使用 AT&T 语法，与教材一致：源操作数在前，目的操作数在后，寄存器带 `%`，立即数带 `$`。
+
+#### 查看寄存器
+
+| 命令 | 作用 |
+| --- | --- |
+| `info registers` | 显示全部寄存器；`info registers rdi rsi` 只显示指定的几个 |
+| `p $rdi` | 打印一个寄存器；`$eax` 是 `$rax` 的低 32 位 |
+| `p/x $rsi` | 按十六进制打印；`/u`、`/d`、`/t` 分别按无符号十进制、有符号十进制、二进制打印 |
+| `p $rdi + 8` | 寄存器可以参与运算，常用于计算地址 |
+
+x86-64 Linux 的调用约定规定，函数的前六个整数或指针参数依次放在 `rdi`、`rsi`、`rdx`、`rcx`、`r8`、`r9`，返回值放在 `rax`（32 位时是 `eax`）。因此在关卡入口处，`rdi` 指向输入的口令字符串，`rsi` 是 challenge；每遇到一次 `call`，都要按那次调用重新判断各寄存器的含义。
+
+#### 查看内存
+
+`x` 命令的写法是 `x/数量格式单位 地址`。格式常用 `x`（十六进制）、`u`（无符号十进制）、`d`（有符号十进制）、`s`（字符串）和 `i`（指令）；单位 `b`、`h`、`w`、`g` 分别表示 1、2、4、8 字节。
+
+| 命令 | 作用 |
+| --- | --- |
 | `x/s $rdi` | 把 `rdi` 指向的内存当作字符串显示 |
 | `x/6uw 地址` | 从该地址起读 6 个 4 字节无符号整数，适合查看数组 |
 | `x/2gx 地址` | 读 2 个 8 字节值并以十六进制显示，适合查看指针 |
+| `x/4wx $rbp-0x20` | 查看栈帧中的局部变量，偏移从汇编中读取 |
 | `x/8gx $rsp` | 查看栈顶的 8 个 8 字节值 |
+
+x86-64 是小端序：多字节整数的低位字节存放在低地址。用 `x/8xb` 按字节查看时，要从高地址往低地址读出完整的数。
+
+#### 调用栈
+
+| 命令 | 作用 |
+| --- | --- |
 | `bt` | 查看调用栈，递归时可以看到每一层 |
+| `info frame` | 查看当前栈帧，包括返回地址保存的位置和调用者 |
 
-`x` 命令的格式是 `x/数量格式单位`。格式常用 `x`（十六进制）、`u`（无符号十进制）、`d`（有符号十进制）、`s`（字符串）和 `i`（指令）；单位 `b`、`h`、`w`、`g` 分别表示 1、2、4、8 字节。
+#### 自动显示与分栏
 
-在关卡入口处，`rdi` 指向输入的口令字符串，`rsi` 是 challenge；进入其他函数后，要按那次调用重新判断各寄存器的含义。`layout asm` 和 `layout regs` 可以在终端中分栏显示汇编和寄存器，`tui disable` 退出分栏。
+`display` 让 GDB 每次停下都自动打印表达式，例如 `display/i $pc`、`display/x $rax`；`info display` 列出编号，`undisplay 编号` 取消。
 
-### 本地测试
+`layout asm` 和 `layout regs` 在终端中分栏显示汇编和寄存器，单步时可以同时看到指令和寄存器的变化；`tui disable` 退出分栏。
+
+#### 批处理与命令文件
+
+不进入交互界面也能执行 GDB 命令，适合导出汇编：
+
+```sh
+gdb -batch -ex 'disassemble phase_01' ./bomb > phase_01.gdb.txt
+```
+
+每次调试都要重复的命令可以写进文件，例如 `phase1.gdb`：
+
+```text
+set pagination off
+break *phase_01
+run --seed 42 --phase 1 < input.txt
+display/i $pc
+```
+
+然后用 `gdb -x phase1.gdb ./bomb` 启动，GDB 会依次执行文件中的命令。
+
+#### 参考资料
+
+- GDB 官方文档：<https://www.sourceware.org/gdb/documentation/>
+- CS:APP x86-64 GDB 速查表：<http://csapp.cs.cmu.edu/3e/docs/gdbnotes-x86-64.pdf>
+- Beej's Quick Guide to GDB：<https://beej.us/guide/bggdb/>
+- 知乎专栏文章（延伸阅读）：<https://zhuanlan.zhihu.com/p/1961833750619988266>
+
+### 实验操作
+
+#### 运行炸弹
+
+```sh
+./bomb --seed 42 --phase 1
+```
+
+程序显示本关的 challenge 和需要输入的整数个数，然后等待输入一行口令。`--phase 1` 表示只运行第 1 关；省略这个参数则依次运行六关。也可以把口令写进文件，用重定向输入，例如 `./bomb --seed 42 < answers.txt`。
+
+seed 用来生成各关的 challenge。同一个 seed 和关卡对应同一个 challenge，适合反复调试；换 seed 可以检查另一组输入。分析时先固定 seed，不要每次运行都换。
+
+#### 调试炸弹
+
+各关入口函数名是 `phase_01` 至 `phase_06`。分析一关时可以按以下步骤进行：
+
+1. **导出汇编，看清结构。**
+
+    ```sh
+    objdump -d --no-show-raw-insn --disassemble=phase_01 ./bomb > phase_01.S
+    ```
+
+    在文件中找出函数调用、分支、循环、比较和返回的位置。如果关卡调用了其他函数，也要导出并阅读这些函数，不要只读入口函数。
+
+2. **准备占位输入。** 把数量正确的占位整数写进文件，例如第 1 关执行 `echo 0 > input.txt`。答案不正确也能在进入关卡函数时停下观察，不必先猜中答案。
+
+3. **在 GDB 中停在关卡入口。**
+
+    ```text
+    $ gdb ./bomb
+    (gdb) break *phase_01
+    (gdb) run --seed 42 --phase 1 < input.txt
+    (gdb) x/s $rdi
+    (gdb) p/x $rsi
+    ```
+
+4. **单步验证推测。** 用 `ni`、`si` 逐条执行到关键的计算和比较，查看寄存器和内存，确认汇编中每一步的含义。
+
+5. **写成代码并测试。** 把恢复出的计算关系写进 `defuser.c` 中对应的 `solve_phase_N`，再按下一小节测试。
+
+导出的汇编适合看清整体结构，在线 GDB 适合确认某一时刻寄存器和内存中的值；两种方式在 [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中都有完整示范。工具操作不熟练时，先回到 tutor 教学和 [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)。
+
+#### 测试炸弹
 
 每次修改 `defuser.c` 后先重新编译，再检查同一个 seed 下的口令：
 
@@ -301,7 +388,7 @@ make test
 
 一次运行正确不能证明所有输入都正确。还需要检查分支、循环边界和不同的数据起点。
 
-### GitHub Actions 自测
+#### GitHub Actions 自测
 
 提交并 push 个人 `bomb` 和解法后，仓库中的 `BombLab public tests` 工作流会自动运行。它分别测试正式六关和选做隐藏关，不测试 tutor 教学，也不读取 `config.txt`，不需要学号、Secrets 或登录令牌。
 
@@ -484,6 +571,6 @@ git push -f origin final
 - CSAPP 第三章、课程讲义中的 x86-64 汇编与过程调用内容。
 - [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md)。
 - [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)。
-- GDB 中的 `help`，以及 `man gdb`、`man objdump`。
+- “GDB 教学”末尾列出的 GDB 资料，以及 `man objdump`。
 
 遇到问题时，在课程讨论区提问或联系本实验助教，联系方式见课程公告。请说明运行环境、使用的命令、报错信息，以及已经尝试过的方法；涉及关卡解法的内容不要公开贴出完整代码。
