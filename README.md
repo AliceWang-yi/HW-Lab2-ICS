@@ -170,6 +170,52 @@ GDB 是 GNU 调试器。本实验用它让炸弹停在某条指令之前，查�
 
 GDB 命令大多可以缩写，下面各表的“简写”一列给出了常用写法；直接按回车会重复上一条命令，连续单步时很方便。忘记用法时，在 GDB 中执行 `help 命令名`。
 
+#### 两种调试方式
+
+分析一关时，通常交替使用两种方式：
+
+| 方式 | 做法 | 适合回答的问题 |
+| --- | --- | --- |
+| 导出汇编 | 用 `objdump` 或 `gdb -batch` 把汇编写进文件，在编辑器中阅读、搜索、标注 | 调用了哪些函数，分支、循环和比较在哪里 |
+| 在线调试 | 在 GDB 中运行程序，停在某条指令之前，查看寄存器和内存 | 某一时刻寄存器和内存里的具体值是多少 |
+
+导出的汇编只有指令，看不到运行时的值；在线调试能看到值，但一次只能看一个时刻。下面用 tutor 教学的 `phase_00` 演示两者如何配合，先在 `tutor/` 目录中执行 `make`。
+
+**第一步：导出汇编，推测计算关系。**
+
+```sh
+objdump -d --no-show-raw-insn --disassemble=phase_00 ./bomb > phase_00.S
+```
+
+在 `phase_00.S` 中可以找到“编写解法”示例里的那段指令：challenge 经过右移、取低 8 位和异或后放进 `edi`，再由 `cmp %edi,-0x20(%rbp)` 与输入的第一个整数比较。由此推测第一个数是 `((challenge >> 5) & 255) ^ 42`。记下这条比较指令的地址，例如 `4014d6`；地址以自己导出的汇编为准。
+
+**第二步：在线调试，确认具体的值。** 用占位输入运行，停在比较指令处查看两边的值（省略了部分输出）：
+
+```text
+$ gdb ./bomb
+(gdb) break *phase_00
+(gdb) break *0x4014d6
+(gdb) run --seed 42 --phase 0 < phase0-input.txt
+Breakpoint 1, 0x0000000000401460 in phase_00 ()
+(gdb) set $challenge = $rsi
+(gdb) p/x $challenge
+$1 = 0xbdd732262feb6e95
+(gdb) continue
+Breakpoint 2, 0x00000000004014d6 in phase_00 ()
+(gdb) p/u $edi
+$2 = 94
+(gdb) x/1uw $rbp-0x20
+0x7fffffffd3f0:	0
+(gdb) p/u (($challenge >> 5) & 255) ^ 42
+$3 = 94
+```
+
+- 在入口处用 `set $challenge = $rsi` 把 challenge 存进 GDB 的便利变量。`rsi` 之后会被改写，停在比较指令时它已经不是 challenge 了，所以要在入口先记下。
+- 停在 `cmp` 时，`edi` 中是程序算出的期望值 94，`$rbp-0x20` 处是输入的第一个整数，也就是占位值 0。
+- 在 GDB 中按推测的公式计算，同样得到 94，说明从汇编读出的计算关系是对的。占位输入与期望值不相等，这次运行会失败，但需要的信息已经拿到了。
+
+换一个 seed 再做一次，结果仍然一致，就可以把公式写进求解函数。正式关卡也按这个思路：先从导出的汇编中找出关键的计算和比较，再在线停在那里核对。命令的详细用法见下面各小节。
+
 #### 启动与退出
 
 ```sh
@@ -341,7 +387,7 @@ seed 用来生成各关的 challenge。同一个 seed 和关卡对应同一个 c
 
 5. **写成代码并测试。** 把恢复出的计算关系写进 `defuser.c` 中对应的 `solve_phase_N`，再按下一小节测试。
 
-导出的汇编适合看清整体结构，在线 GDB 适合确认某一时刻寄存器和内存中的值；两种方式在 [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中都有完整示范。工具操作不熟练时，先回到 tutor 教学和 [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)。
+两种方式如何配合，见“GDB 教学”开头的示范；[tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中有完整的逐步练习。工具操作不熟练时，先回到 tutor 教学和 [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)。
 
 #### 测试炸弹
 
