@@ -43,8 +43,6 @@ apt-get update
 apt-get install -y gcc make python3 gdb binutils
 ```
 
-root 权限只用于安装软件；克隆仓库、编译和调试都不需要 root。没有 root 或 sudo 权限时，先用 `gcc --version`、`gdb --version`、`objdump --version` 和 `python3 --version` 检查是否已经安装，其中 Python 需要 3.10 或更高版本；缺少时联系服务器管理员。
-
 本实验的炸弹是 64 位 Linux 程序，不需要 DataLab 使用的 32 位编译环境，也不能直接在 Windows、macOS 或 ARM Linux 上运行。可以用 `uname -sm` 检查环境；本实验需要的输出是 `Linux x86_64`。
 
 ### 先完成 tutor 教学
