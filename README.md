@@ -170,7 +170,7 @@ int solve_phase_0(uint64_t challenge, char *out, size_t cap) {
 
 ### GDB 教学
 
-GDB 是 GNU 调试器。本实验用它让炸弹停在某条指令之前，查看此刻的寄存器和内存，验证从汇编中读出的推测。下面的命令以第 1 关为例，[tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中有一次完整的演练。
+GDB 是 GNU 调试器。本实验用它让炸弹停在某条指令之前，查看此刻的寄存器和内存，验证从汇编中读出的推测。下面介绍两种分析方法，以及常用的 GDB 命令。
 
 GDB 命令大多可以缩写，下面各表的“简写”一列给出了常用写法；直接按回车会重复上一条命令，连续单步时很方便。忘记用法时，在 GDB 中执行 `help 命令名`。
 
@@ -180,12 +180,14 @@ GDB 命令大多可以缩写，下面各表的“简写”一列给出了常用�
 
 | 方式 | 做法 | 适合回答的问题 |
 | --- | --- | --- |
-| 导出汇编 | 用 `objdump` 或 `gdb -batch` 把汇编写进文件，在编辑器中阅读、搜索、标注 | 调用了哪些函数，分支、循环和比较在哪里 |
-| 在线调试 | 在 GDB 中运行程序，停在某条指令之前，查看寄存器和内存 | 某一时刻寄存器和内存里的具体值是多少 |
+| 方法 1：离线分析 | 用 `objdump` 或 `gdb -batch` 把汇编写进文件，在编辑器中阅读、搜索、标注 | 调用了哪些函数，分支、循环和比较在哪里 |
+| 方法 2：GDB 在线调试 | 在 GDB 中运行程序，停在某条指令之前，查看寄存器和内存 | 某一时刻寄存器和内存里的具体值是多少 |
 
-导出的汇编只有指令，看不到运行时的值；在线调试能看到值，但一次只能看一个时刻。下面用 tutor 教学的 `phase_00` 演示两者如何配合，先在 `tutor/` 目录中执行 `make`。
+导出的汇编只有指令，看不到运行时的值；在线调试能看到值，但一次只能看一个时刻。下面用公开的示例关卡 `phase_00` 演示两者如何配合，先在 `tutor/` 目录中执行 `make`。
 
-**第一步：导出汇编，推测计算关系。**
+##### 方法 1：离线分析
+
+导出汇编，推测计算关系：
 
 ```sh
 objdump -d --no-show-raw-insn --disassemble=phase_00 ./bomb > phase_00.S
@@ -193,7 +195,9 @@ objdump -d --no-show-raw-insn --disassemble=phase_00 ./bomb > phase_00.S
 
 在 `phase_00.S` 中可以找到“编写解法”示例里的那段指令：challenge 经过右移、取低 8 位和异或后放进 `edi`，再由 `cmp %edi,-0x20(%rbp)` 与输入的第一个整数比较。由此推测第一个数是 `((challenge >> 5) & 255) ^ 42`。记下这条比较指令的地址，例如 `4014d6`；地址以自己导出的汇编为准。
 
-**第二步：在线调试，确认具体的值。** 用占位输入运行，停在比较指令处查看两边的值（省略了部分输出）：
+##### 方法 2：GDB 在线调试
+
+用占位输入运行，停在比较指令处查看两边的值（省略了部分输出）：
 
 ```text
 $ gdb ./bomb
@@ -227,6 +231,8 @@ gdb --args ./bomb --seed 42 --phase 1
 ```
 
 `--args` 把后面的内容都当作被调试程序的参数。此时程序还没有开始运行，先设好断点，再用 `run` 启动。
+
+下面的 `input.txt` 指存有口令的文本文件；`< input.txt` 让程序从文件读取，而不必每次手动输入。只调试一关时，文件里只需一行口令。
 
 | 命令 | 简写 | 作用 |
 | --- | --- | --- |
@@ -362,40 +368,44 @@ seed 用来生成各关的 challenge。同一个 seed 和关卡对应同一个 c
 >
 > 如果不确定口令需要几个整数，不妨看看 `sscanf` 这类输入解析函数，线索也许就在它们的调用附近。
 
-各关入口函数名是 `phase_01` 至 `phase_06`。分析一关时可以按以下步骤进行：
+各关入口函数名是 `phase_01` 至 `phase_06`。下面以第 1 关为例，两种方法可以配合使用。
 
-1. **导出汇编，看清结构。**
+##### 方法 1：离线分析
 
-    ```sh
-    objdump -d --no-show-raw-insn --disassemble=phase_01 ./bomb > phase_01.S
-    ```
+导出本关汇编，在编辑器中阅读和标注：
 
-    在文件中找出函数调用、分支、循环、比较和返回的位置。如果关卡调用了其他函数，也要导出并阅读这些函数，不要只读入口函数。
+```sh
+objdump -d --no-show-raw-insn --disassemble=phase_01 ./bomb > phase_01.S
+```
 
-2. **用自己的程序生成调试输入。** 关卡函数会先检查输入的格式和整数个数，不符合时直接判定失败，执行不到后面的计算。整数个数要从汇编中自己找出，例如格式检查函数的参数和 `sscanf` 的格式串，[tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中演示了这种找法。确定后，在 `defuser.c` 对应的函数中把 `count` 改为这个个数，`values` 先保持 0，再生成输入：
+找出函数调用、分支、循环、比较和返回的位置。如果关卡调用了其他函数，也要导出并阅读这些函数，不要只读入口函数。这种方法不运行炸弹，适合先理清计算关系和控制流程。
 
-    ```sh
-    make
-    ./defuser --seed 42 --phase 1 > input.txt
-    ```
+##### 方法 2：GDB 在线调试
 
-    这时得到的是一行占位口令，答案不对，但足以让炸弹通过格式检查、执行到后面的计算。之后每改进一次解法，就重新生成 `input.txt`，在 GDB 中查看新的口令在哪一步与期望值不一致。
+**准备调试输入。** 关卡会先检查输入格式，不符合时可能提前返回。根据汇编确定本关需要的整数个数后，在 `defuser.c` 对应的函数中把 `count` 改为这个个数，`values` 可以暂时保持 0，然后生成输入：
 
-3. **在 GDB 中停在关卡入口。**
+```sh
+make
+./defuser --seed 42 --phase 1 > input.txt
+```
 
-    ```text
-    $ gdb ./bomb
-    (gdb) break *phase_01
-    (gdb) run --seed 42 --phase 1 < input.txt
-    (gdb) x/s $rdi
-    (gdb) p/x $rsi
-    ```
+`input.txt` 是临时的调试输入文件，保存 `defuser` 输出的一行口令，供 GDB 重复读取。`>` 把输出写入文件，`<` 让炸弹从文件读取；文件名可以更换，不需要提交。占位口令只用于观察程序如何处理输入，不表示已经找到正确答案。
 
-4. **单步验证推测。** 用 `ni`、`si` 逐条执行到关键的计算和比较，查看寄存器和内存，确认汇编中每一步的含义。
+**设置断点并运行。**
 
-5. **写成代码并测试。** 把恢复出的计算关系写进 `defuser.c` 中对应的 `solve_phase_N`，再按下一小节测试。
+```text
+$ gdb ./bomb
+(gdb) break *phase_01
+(gdb) run --seed 42 --phase 1 < input.txt
+(gdb) x/s $rdi
+(gdb) p/x $rsi
+```
 
-两种方式如何配合，见“GDB 教学”开头的示范；[tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中有完整的逐步练习。工具操作不熟练时，先回到 tutor 教学和 [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)。
+不想使用文件时，去掉 `< input.txt`，运行后在终端手动输入一行口令即可。
+
+**单步检查。** 用 `ni`、`si` 逐条执行到关键的计算和比较，查看寄存器和内存，核对从汇编中推测的计算关系。
+
+每次修改解法后，重新编译并生成 `input.txt`；换 seed 或关卡时，生成口令和运行炸弹的参数也要一起修改。把确认的计算关系写进对应的 `solve_phase_N`，再按下一小节测试。
 
 #### 测试炸弹
 
@@ -414,7 +424,7 @@ make
 python3 public_test.py --phase 1
 ```
 
-模板中的六关尚未实现，初次测试会出现以下结果，中间省略了其他 seed：
+模板中的六关求解函数尚未实现，初次测试会出现以下结果，中间省略了其他 seed：
 
 ```text
 Phase 1 seed 0: FAIL (solver_error)
@@ -422,7 +432,7 @@ Phase 1 seed 0: FAIL (solver_error)
 Public tests: 0/10
 ```
 
-这不表示环境安装失败。完成解法后，本关全部公开测试通过的结果应为 `Public tests: 10/10`。
+这里的 `solver_error` 来自尚未实现的求解函数。完成本关解法后，重新运行测试；全部公开 seed 通过时会显示 `Public tests: 10/10`。
 
 一次测试全部正式六关：
 
@@ -430,7 +440,7 @@ Public tests: 0/10
 make test
 ```
 
-六关全部公开测试通过时显示 `Public tests: 60/60`，随后检查隐藏关：还没有实现 `solve_secret` 时显示 `Secret phase: not attempted`，不算失败。`make test` 不包含 tutor 教学。
+六关全部公开测试通过时显示 `Public tests: 60/60`，随后检查隐藏关：还没有实现 `solve_secret` 时显示 `Secret phase: not attempted`，不算失败。
 
 公开测试通过后，再选一个没有用于调试、也不在公开列表中的 seed 检查，例如：
 
@@ -442,7 +452,7 @@ make test
 
 #### GitHub Actions 自测
 
-提交并 push 个人 `bomb` 和解法后，仓库中的 `BombLab public tests` 工作流会自动运行。它分别测试正式六关和选做隐藏关，不测试 tutor 教学，也不读取 `config.txt`，不需要学号、Secrets 或登录令牌。
+提交并 push 个人 `bomb` 和解法后，仓库中的 `BombLab public tests` 工作流会自动运行。它分别测试正式六关和选做隐藏关，不读取 `config.txt`，不需要学号、Secrets 或登录令牌。
 
 在 GitHub 仓库的 Actions 页面打开本次运行，查看 `Phase 1 public tests` 至 `Phase 6 public tests`。某关失败不会取消其他关，点开任务日志可以查看失败的 seed 和错误类别。
 
