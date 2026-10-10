@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     puts(output);
 #else
     printf("Phase 0 challenge: 0x%016" PRIx64 "\n", challenge);
-    puts("Input (2 unsigned decimal integers):");
+    puts("Input (unsigned decimal integers):");
     fflush(stdout);
     char input[ANSWER_CAP];
     size_t used = 0;

@@ -20,7 +20,7 @@ make test
 ./bomb --seed 42 --phase 0
 ```
 
-记录屏幕上的 challenge。先输入 `0 0`，本次失败只用于认识输入格式。
+记录屏幕上的 challenge。炸弹只提示输入无符号十进制整数，不提示个数；本练习的口令是两个整数，先输入 `0 0`，本次失败只用于认识输入格式。下一节会说明如何从汇编中看出个数，正式关卡需要用同样的方法自己确定。
 
 ## 两种调试方式
 
@@ -47,7 +47,7 @@ gdb -batch -ex 'disassemble phase_00' -ex 'disassemble tutorial_mix' ./bomb > ph
 在导出的文件中依次找到并标注：
 
 - 每条 `call` 调用的函数：`valid_u32_fields`、`sscanf` 和 `tutorial_mix`；
-- `sscanf` 之后与 2 的比较，即检查是否读到两个整数；
+- 调用 `valid_u32_fields` 之前放进 `esi` 的 2，以及 `sscanf` 之后与 2 的比较，说明口令由两个整数组成；
 - 对 challenge 的移位、截取和异或，以及随后与第一个整数的比较；
 - `tutorial_mix` 的返回值与第二个整数的比较；
 - 设置返回值（`al` 或 `eax`）的位置，也就是关卡判定成功或失败的地方。
