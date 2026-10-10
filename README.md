@@ -626,9 +626,6 @@ git push -f origin final
 
 ## 参考资料与致谢
 
-- CSAPP 第三章、课程讲义中的 x86-64 汇编与过程调用内容。
-- [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md)。
-- [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)。
 - GDB 官方文档：<https://www.sourceware.org/gdb/documentation/>
 - CS:APP x86-64 GDB 速查表：<http://csapp.cs.cmu.edu/3e/docs/gdbnotes-x86-64.pdf>
 - Beej's Quick Guide to GDB：<https://beej.us/guide/bggdb/>
