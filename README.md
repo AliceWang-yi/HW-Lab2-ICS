@@ -126,12 +126,7 @@ int solve_phase_1(uint64_t challenge, char *out, size_t cap);
 
 根据 challenge 算出口令，写入 `out`；字符串连同结尾的 `\0` 不能超过 `cap` 字节。成功时返回 0，尚未实现或发生错误时返回非零。
 
-正式六关的口令格式要求：
-
-- 使用无符号十进制整数，范围为 0 至 4294967295，以空格分隔。
-- 字段数符合关卡要求，不附加文字或多余数字。
-- 写入 `out` 的字符串以 `\0` 结尾，不包含换行；驱动程序会添加换行。
-- 调试信息写到 stderr，不要写到 stdout，否则会混入口令。
+正式六关的口令是一行用空格分隔的无符号十进制整数。`out` 中不要加换行，驱动程序会自动添加；调试信息写到 stderr，写到 stdout 会混入口令。
 
 注意汇编中的运算宽度。32 位无符号加、减、乘会按模 2³² 回绕；不要将它们恢复成无限精度计算，也不要依赖 C 的有符号溢出。
 
@@ -252,7 +247,7 @@ Actions 只检查公开测试，不是最终成绩。助教会使用保存的个
 int solve_secret(uint64_t challenge, uint64_t context, char *out, size_t cap);
 ```
 
-`challenge` 是隐藏关的 challenge，`context` 由前六行口令得到。`./defuser --secret` 会先调用六个正式关卡的求解函数计算 `context`，六关未完成时会直接报错。`solve_secret` 写出完整的第七行，不受正式六关“只含十进制整数”的格式限制，但仍须是一行 ASCII 文本，不包含换行。
+`challenge` 是隐藏关的 challenge，`context` 由前六行口令得到。`./defuser --secret` 会先调用六个正式关卡的求解函数计算 `context`，六关未完成时会直接报错。`solve_secret` 写出完整的第七行，不受正式六关整数格式的限制，但仍须是一行 ASCII 文本，不包含换行。
 
 可以从 `secret_gate`、`secret_copy` 和 `secret_phase` 开始分析。入口和校验方式需要自己观察，不要求覆盖返回地址，也不需要 shellcode。
 
