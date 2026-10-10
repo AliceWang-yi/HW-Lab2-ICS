@@ -328,13 +328,6 @@ display/i $pc
 
 然后用 `gdb -x phase1.gdb ./bomb` 启动，GDB 会依次执行文件中的命令。
 
-#### 参考资料
-
-- GDB 官方文档：<https://www.sourceware.org/gdb/documentation/>
-- CS:APP x86-64 GDB 速查表：<http://csapp.cs.cmu.edu/3e/docs/gdbnotes-x86-64.pdf>
-- Beej's Quick Guide to GDB：<https://beej.us/guide/bggdb/>
-- 知乎专栏文章（延伸阅读）：<https://zhuanlan.zhihu.com/p/1961833750619988266>
-
 ### tutor 教学
 
 `tutor/` 目录中是一个独立的教学关卡，提供源码和参考解法，不计分，也不需要填写学号或下载个人炸弹。它用上面的 GDB 命令完整演示一次“导出汇编 → 在线调试 → 写出求解函数”的过程，建议在开始正式关卡前做一遍。
@@ -360,6 +353,16 @@ make -C tutor test
 seed 用来生成各关的 challenge。同一个 seed 和关卡对应同一个 challenge，适合反复调试；换 seed 可以检查另一组输入。分析时先固定 seed，不要每次运行都换。
 
 #### 调试炸弹
+
+> **提示：怎样确定口令中的整数个数**
+>
+> 在 GDB 中用 `disassemble phase_01` 找输入解析或格式检查相关的 `call`，在调用前设置断点。分析其他关时，换成对应的关卡函数名。
+>
+> - `valid_u32_fields` 的第二个参数是要求的整数个数，调用前用 `p/u $rsi` 查看。
+> - `sscanf`（名称可能带前缀）的第二个参数是格式字符串，调用前用 `x/s $rsi` 查看其中读取整数的转换项。
+> - `sscanf` 返回后，用 `p/d $eax` 查看成功读取的个数，再结合后面的比较指令确认要求。
+>
+> 这些寄存器的含义只适用于对应的调用位置；在关卡入口处，`$rsi` 是 challenge，不是格式字符串。格式检查失败会提前返回，解析函数的断点未命中时，先看前面的检查。
 
 各关入口函数名是 `phase_01` 至 `phase_06`。分析一关时可以按以下步骤进行：
 
@@ -533,6 +536,10 @@ make
 
 不能。配置只用于下载，正式评分使用课程名单中与你的 GitHub 账号绑定的炸弹。误领他人的炸弹时，请先保留自己的解法文件，删除错误的 `bomb`，用自己的学号重新领取。
 
+### 其他问题
+
+遇到问题时，在课程讨论区提问或联系本实验助教，联系方式见课程公告。请说明运行环境、使用的命令、报错信息，以及已经尝试过的方法；涉及关卡解法的内容不要公开贴出完整代码。
+
 ## 提交
 
 ### 内容要求
@@ -617,11 +624,15 @@ git push -f origin final
 
 引用资料需要在报告中列出。AI 工具的允许范围以课程公告为准；使用允许的工具时说明用途，并能解释自己的分析和代码，不要将工具生成的完整解法当作自己的分析提交。
 
-## 参考资料与问题反馈
+## 参考资料与致谢
 
 - CSAPP 第三章、课程讲义中的 x86-64 汇编与过程调用内容。
 - [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md)。
 - [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)。
-- “GDB 教学”末尾列出的 GDB 资料，以及 `man objdump`。
+- GDB 官方文档：<https://www.sourceware.org/gdb/documentation/>
+- CS:APP x86-64 GDB 速查表：<http://csapp.cs.cmu.edu/3e/docs/gdbnotes-x86-64.pdf>
+- Beej's Quick Guide to GDB：<https://beej.us/guide/bggdb/>
+- 知乎专栏文章（延伸阅读）：<https://zhuanlan.zhihu.com/p/1961833750619988266>
+- `objdump` 手册：在终端运行 `man objdump`。
 
-遇到问题时，在课程讨论区提问或联系本实验助教，联系方式见课程公告。请说明运行环境、使用的命令、报错信息，以及已经尝试过的方法；涉及关卡解法的内容不要公开贴出完整代码。
+本实验说明的组织方式参考了本课程的 DataLab 文档。感谢课程助教团队，以及上述资料的作者与维护者。
