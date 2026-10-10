@@ -43,19 +43,7 @@ apt-get update
 apt-get install -y gcc make python3 gdb binutils
 ```
 
-本实验的炸弹是 64 位 Linux 程序，不需要 DataLab 使用的 32 位编译环境，也不能直接在 Windows、macOS 或 ARM Linux 上运行。可以用 `uname -sm` 检查环境；本实验需要的输出是 `Linux x86_64`。
-
-### 先完成 tutor 教学
-
-`tutor/` 是独立的 tutor 教学，提供源码和参考解法，不计分，也不需要填写学号或下载个人炸弹。
-
-在仓库根目录运行：
-
-```sh
-make -C tutor test
-```
-
-按 [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 练习设置断点、查看寄存器、读取内存和单步执行。熟悉这些操作后，再开始正式关卡。根目录的 `make test-tutor` 也可以运行 tutor 教学的测试。
+本实验的炸弹是 64 位 Linux 程序，不能直接在 Windows、macOS 或 ARM Linux 上运行。可以用 `uname -sm` 检查环境；本实验需要的输出是 `Linux x86_64`。
 
 ### 领取个人炸弹并编译
 
@@ -74,7 +62,7 @@ make bomb
 make
 ```
 
-`make bomb` 下载个人炸弹，`make` 编译解法程序 `defuser`。两条命令没有报错，且根目录出现 `bomb` 和 `defuser`，就可以开始实验。下载失败的处理方法见下方“常见问题”。
+`make bomb` 下载个人炸弹，`make` 编译解法程序 `defuser`。两条命令没有报错，且根目录出现 `bomb` 和 `defuser`，就可以开始实验。下载失败的处理方法见下方[常见问题](#make-bomb-下载失败)。
 
 领取成功后，修改 `defuser.c` 只需要重新运行 `make`，不用再次领取炸弹。已有 `bomb` 时，`make bomb` 也不会重复下载。
 
@@ -300,6 +288,18 @@ display/i $pc
 - CS:APP x86-64 GDB 速查表：<http://csapp.cs.cmu.edu/3e/docs/gdbnotes-x86-64.pdf>
 - Beej's Quick Guide to GDB：<https://beej.us/guide/bggdb/>
 - 知乎专栏文章（延伸阅读）：<https://zhuanlan.zhihu.com/p/1961833750619988266>
+
+### tutor 教学
+
+`tutor/` 目录中是一个独立的教学关卡，提供源码和参考解法，不计分，也不需要填写学号或下载个人炸弹。它用上面的 GDB 命令完整演示一次“导出汇编 → 在线调试 → 写出求解函数”的过程，建议在开始正式关卡前做一遍。
+
+在仓库根目录运行：
+
+```sh
+make -C tutor test
+```
+
+然后按 [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 的说明逐步操作。根目录的 `make test-tutor` 也可以运行 tutor 教学的测试。
 
 ### 实验操作
 
