@@ -4,11 +4,11 @@
 
 本实验是 CSAPP 第三章配套实验。你需要用反汇编和 GDB 分析一个没有提供源码的程序，理解其中的函数调用、分支、循环、递归和指针操作，再用 C 语言写出对应的解法。
 
-每位同学领取自己的二进制炸弹 `bomb`，完成六个正式关卡，并提交 `defuser.c` 和实验报告。正式六关考点相同，但不同同学的常量、运算和数据布局可能不同。另有一个选做的隐藏关。
+每位同学领取自己的二进制炸弹 `bomb`，完成六个正式关卡，并提交 `defuser.c` 和实验报告。正式六关考点相同，但不同同学的常量、运算和数据布局可能不同。另有一个选做的 Honor。
 
 > **本实验提交的是解法程序，不是六个固定密码。** 每关会给出一个数值 challenge，正确口令随它变化。你需要在 `defuser.c` 中实现从 challenge 算出口令的函数；助教会用未公开的输入检查解法。
 
-基础分为 110 分，隐藏关为 Honor 部分，最多额外加 10 分，最高总分为 120 分。截止时间、迟交规则和报告检查安排以 E-Learning 的课程公告及本实验作业页面为准。
+基础分为 110 分，Honor 最多额外加 10 分，最高总分为 120 分。截止时间、迟交规则和报告检查安排以 E-Learning 的课程公告及本实验作业页面为准。
 
 > **前排提示**
 >
@@ -93,7 +93,7 @@ git add -f bomb
 | `tutor/` | [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md)，包含源码和参考解法 |
 | `teaching/` | [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)，用于练习六关涉及的知识点 |
 | `defuser_main.c`、`challenge.c`、`cli.c` 等 | 公共驱动程序，不需要修改 |
-| `public_test.py`、`tests/public.json` | 公开测试程序和 seed，包括正式六关和选做隐藏关 |
+| `public_test.py`、`tests/public.json` | 公开测试程序和 seed，包括正式六关和选做 Honor |
 | `.github/workflows/public-tests.yml` | GitHub Actions 公开自测工作流 |
 
 ## 实验内容
@@ -191,7 +191,7 @@ GDB 命令大多可以缩写，下面各表的“简写”一列给出了常用�
 
 导出的汇编只有指令，看不到运行时的值；在线调试能看到值，但一次只能看一个时刻。下面用公开的示例关卡 `phase_00` 演示两者如何配合，先在 `tutor/` 目录中执行 `make`。
 
-##### 方法 1：离线分析
+#### 方法 1：离线分析
 
 导出汇编，推测计算关系：
 
@@ -201,7 +201,7 @@ objdump -d --no-show-raw-insn --disassemble=phase_00 ./bomb > phase_00.S
 
 在 `phase_00.S` 中可以找到“编写解法”示例里的那段指令：challenge 经过右移、取低 8 位和异或后放进 `edi`，再由 `cmp %edi,-0x20(%rbp)` 与输入的第一个整数比较。由此推测第一个数是 `((challenge >> 5) & 255) ^ 42`。记下这条比较指令的地址，例如 `4014d6`；地址以自己导出的汇编为准。
 
-##### 方法 2：GDB 在线调试
+#### 方法 2：GDB 在线调试
 
 用占位输入运行，停在比较指令处查看两边的值（省略了部分输出）：
 
@@ -376,7 +376,7 @@ seed 用来生成各关的 challenge。同一个 seed 和关卡对应同一个 c
 
 各关入口函数名是 `phase_01` 至 `phase_06`。下面以第 1 关为例，两种方法可以配合使用。
 
-##### 方法 1：离线分析
+#### 方法 1：离线分析
 
 导出本关汇编，在编辑器中阅读和标注：
 
@@ -386,7 +386,7 @@ objdump -d --no-show-raw-insn --disassemble=phase_01 ./bomb > phase_01.S
 
 找出函数调用、分支、循环、比较和返回的位置。如果关卡调用了其他函数，也要导出并阅读这些函数，不要只读入口函数。这种方法不运行炸弹，适合先理清计算关系和控制流程。
 
-##### 方法 2：GDB 在线调试
+#### 方法 2：GDB 在线调试
 
 **准备调试输入。** 关卡会先检查输入格式，不符合时可能提前返回。根据汇编确定本关需要的整数个数后，在 `defuser.c` 对应的函数中把 `count` 改为这个个数，`values` 可以暂时保持 0，然后生成输入：
 
@@ -446,7 +446,7 @@ Public tests: 0/10
 make test
 ```
 
-六关全部公开测试通过时显示 `Public tests: 60/60`，随后检查隐藏关：还没有实现 `solve_secret` 时显示 `Secret phase: not attempted`，不算失败。
+六关全部公开测试通过时显示 `Public tests: 60/60`，随后检查 Honor：还没有实现 `solve_secret` 时显示 `Secret phase: not attempted`，不算失败。
 
 公开测试通过后，再选一个没有用于调试、也不在公开列表中的 seed 检查，例如：
 
@@ -458,17 +458,17 @@ make test
 
 #### GitHub Actions 自测
 
-提交并 push 个人 `bomb` 和解法后，仓库中的 `BombLab public tests` 工作流会自动运行。它分别测试正式六关和选做隐藏关，不读取 `config.txt`，不需要学号、Secrets 或登录令牌。
+提交并 push 个人 `bomb` 和解法后，仓库中的 `BombLab public tests` 工作流会自动运行。它分别测试正式六关和选做 Honor，不读取 `config.txt`，不需要学号、Secrets 或登录令牌。
 
 在 GitHub 仓库的 Actions 页面打开本次运行，查看 `Phase 1 public tests` 至 `Phase 6 public tests`。某关失败不会取消其他关，点开任务日志可以查看失败的 seed 和错误类别。
 
-> **隐藏关是选做题。** 没有实现 `solve_secret` 时，`Secret phase public tests (optional)` 显示 `not attempted` 并通过；实现后才逐个 seed 检查。这一项失败只表示隐藏关有问题，不代表正式六关没通过，也不会让正式六关扣分，请分别查看六个正式关卡的结果。
+> **Honor 是选做题。** 没有实现 `solve_secret` 时，`Secret phase public tests (optional)` 显示 `not attempted` 并通过；实现后才逐个 seed 检查。这一项失败只表示 Honor 有问题，不代表正式六关没通过，也不会让正式六关扣分，请分别查看六个正式关卡的结果。
 
-Actions 只检查公开测试，不是最终成绩。助教会使用保存的个人炸弹重新编译解法，运行隐藏测试；报告另行人工批阅。
+Actions 只检查公开测试，不是最终成绩。助教会使用保存的个人炸弹重新编译解法，运行隐藏测试；报告按提交要求检查，不单独计分。
 
-### 隐藏关（选做）
+### Honor
 
-一次运行全部六关（不带 `--phase`），并且口令来自管道或文件时，炸弹在六关通过后还会读取第七行；没有第七行时正常结束。在终端或 GDB 中手动输入六行，都不会进入隐藏关。
+一次运行全部六关（不带 `--phase`），并且口令来自管道或文件时，炸弹在六关通过后还会读取第七行；没有第七行时正常结束。在终端或 GDB 中手动输入六行，都不会进入 Honor。
 
 求解接口是 `defuser.h` 中的：
 
@@ -476,11 +476,11 @@ Actions 只检查公开测试，不是最终成绩。助教会使用保存的个
 int solve_secret(uint64_t challenge, uint64_t context, char *out, size_t cap);
 ```
 
-`challenge` 是隐藏关的 challenge，`context` 由前六行口令得到。`./defuser --secret` 会先调用六个正式关卡的求解函数计算 `context`，六关未完成时会直接报错。`solve_secret` 写出完整的第七行，不受正式六关整数格式的限制，但仍须是一行 ASCII 文本，不包含换行。
+`challenge` 是 Honor 的 challenge，`context` 由前六行口令得到。`./defuser --secret` 会先调用六个正式关卡的求解函数计算 `context`，六关未完成时会直接报错。`solve_secret` 写出完整的第七行，不受正式六关整数格式的限制，但仍须是一行 ASCII 文本，不包含换行。
 
 可以从 `secret_gate`、`secret_copy` 和 `secret_phase` 开始分析。入口和校验方式需要自己观察，不要求覆盖返回地址，也不需要 shellcode。
 
-> **调试提示：用文件输入进入隐藏关。** 先用已完成的六关生成前六行，再追加一行试探输入：
+> **调试提示：用文件输入进入 Honor。** 先用已完成的六关生成前六行，再追加一行试探输入：
 >
 > ```sh
 > ./defuser --seed 42 > secret.txt
@@ -495,7 +495,7 @@ int solve_secret(uint64_t challenge, uint64_t context, char *out, size_t cap);
 > (gdb) run --seed 42 < secret.txt
 > ```
 >
-> 隐藏关的 challenge 不会打印，可以在 `secret_gate` 入口按调用约定查看参数寄存器。
+> Honor 的 challenge 不会打印，可以在 `secret_gate` 入口按调用约定查看参数寄存器。
 
 > **可参考的仓库材料。** [`teaching/07_stack_copy.c`](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/07_stack_copy.c) 演示同一个结构体内的相邻字段覆盖，可以先对照它观察局部对象的布局。
 
@@ -507,9 +507,9 @@ make
 python3 public_test.py --secret
 ```
 
-只有输出 `Secret phase defused.` 才算隐藏关通过；公开测试全部通过时显示 `Secret public tests: 10/10 (optional)`。`make test` 在六关全部通过后也会自动做这项检查。
+只有输出 `Secret phase defused.` 才算 Honor 通过；公开测试全部通过时显示 `Secret public tests: 10/10 (optional)`。`make test` 在六关全部通过后也会自动做这项检查。
 
-公开测试和评分都要求同一个 seed 下的前六关正确。`prerequisite_` 开头的错误表示前六关在该 seed 下尚未通过，不是隐藏关答案本身的错误；评分时某个隐藏 seed 下任一正式关卡出错，该 seed 的隐藏关也不得分。
+公开测试和评分都要求同一个 seed 下的前六关正确。`prerequisite_` 开头的错误表示前六关在该 seed 下尚未通过，不是 Honor 答案本身的错误；评分时某个隐藏 seed 下任一正式关卡出错，该 seed 的 Honor 也不得分。
 
 ## 常见问题
 
@@ -562,7 +562,7 @@ make
 
 | 文件 | 要求 |
 | --- | --- |
-| `defuser.c` | 正式关卡解法；隐藏关解法也写在这个文件中 |
+| `defuser.c` | 正式关卡解法；Honor 解法也写在这个文件中 |
 | `report.md` 或 `report.pdf` | 实验报告，任选一种格式，不提交 `.doc` 或 `.docx` |
 | `bomb` | 个人炸弹，用于 Actions 公开自测 |
 
@@ -618,10 +618,10 @@ git push -f origin final
 | 正式六关，每关 18 分 | 108 |
 | 实验报告（必交，不单独计分） | 0 |
 | 基础分合计 | 110 |
-| 隐藏关（Honor），额外加分 | +10 |
+| Honor（选做），额外加分 | +10 |
 | 含 Honor 的最高总分 | 120 |
 
-每个正式关卡使用 128 个隐藏 challenge，按通过比例计分，例如通过一半测试得 9 分。Honor 隐藏关使用 128 个隐藏 seed，同样按通过比例计分。公开测试不单独计分，只针对公开 seed 写答案表不能完成实验。
+每个正式关卡使用 128 个隐藏 challenge，按通过比例计分，例如通过一半测试得 9 分。Honor 使用 128 个隐藏 seed，同样按通过比例计分。公开测试不单独计分，只针对公开 seed 写答案表不能完成实验。
 
 实验报告的要求见上面的“内容要求”；未提交报告不能获得格式分。报告检查与抽查安排以课程通知为准。未完全通关时，可以记录已经确认的分析过程和遇到的问题。
 
