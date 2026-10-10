@@ -201,7 +201,7 @@ def main():
         target.write_bytes(payload)
     (ROOT / "bomb").chmod(0o755)
     print(f"已获得学号 {student_id} 的 bomb（package {package['package_id']}）。")
-    print("下一步：make；Phase 0 教程在 tutor/，可运行 make test-phase0")
+    print("下一步：make；tutor 教学在 tutor/，可运行 make test-tutor")
 
 
 if __name__ == "__main__":

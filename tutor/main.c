@@ -11,14 +11,14 @@ int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--help") == 0) {
         puts("Usage: [--seed UINT64] [--phase 0]");
         puts("       --phase 0 --challenge UINT64");
-        puts("Standalone Phase 0 tutorial; default seed 1.");
+        puts("Standalone tutor program; default seed 1.");
         return 0;
     }
     struct options options;
     int parsed = parse_options(argc, argv, &options);
     if (parsed != 0) return parsed < 0 ? 2 : 0;
     if (options.secret_solver || (options.phase != ALL_PHASES && options.phase != 0)) {
-        fputs("This tutorial only supports Phase 0. Use --help.\n", stderr);
+        fputs("The tutor program only supports --phase 0. Use --help.\n", stderr);
         return 2;
     }
     uint64_t challenge = phase_challenge(&options, 0);

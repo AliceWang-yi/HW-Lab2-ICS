@@ -40,7 +40,7 @@ sudo apt-get install gcc make python3 gdb binutils
 
 ### 先完成调试教程
 
-`tutor/` 是独立的 Phase 0 教程，提供源码和参考解法，不计分，也不需要填写学号或下载个人炸弹。
+`tutor/` 是独立的 tutor 教学，提供源码和参考解法，不计分，也不需要填写学号或下载个人炸弹。
 
 在仓库根目录运行：
 
@@ -48,7 +48,7 @@ sudo apt-get install gcc make python3 gdb binutils
 make -C tutor test
 ```
 
-按 [Phase 0 教程](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 练习设置断点、查看寄存器、读取内存和单步执行。熟悉这些操作后，再开始正式关卡。根目录的 `make test-phase0` 也可以运行教程测试。
+按 [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 练习设置断点、查看寄存器、读取内存和单步执行。熟悉这些操作后，再开始正式关卡。根目录的 `make test-tutor` 也可以运行 tutor 教学的测试。
 
 ### 领取个人炸弹并编译
 
@@ -91,9 +91,8 @@ git add -f bomb
 | `defuser.c` | 唯一需要编写的解法代码文件 |
 | `defuser.h` | 求解函数的接口声明 |
 | `config.txt` | 首次领取时填写学号，领取后可清空或删除 |
-| `tutor/` | [Phase 0 调试教程](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md)，包含源码和参考解法 |
+| `tutor/` | [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md)，包含源码和参考解法 |
 | `teaching/` | [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)，用于练习六关涉及的知识点 |
-| `docs/gdb-phases.md` | [各关调试线索](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/docs/gdb-phases.md) |
 | `defuser_main.c`、`challenge.c`、`cli.c` 等 | 公共驱动程序，不需要修改 |
 | `public_test.py`、`tests/public.json` | 公开测试程序和 seed，包括正式六关和选做隐藏关 |
 | `.github/workflows/public-tests.yml` | GitHub Actions 公开自测工作流 |
@@ -188,7 +187,7 @@ gdb --args ./bomb --seed 42 --phase 1
 | `x/8gx $rsp` | 查看栈上的八个 8 字节值 |
 | `continue` | 继续到下一个断点 |
 
-各关入口函数名是 `phase_01` 至 `phase_06`。观察方向见 [各关调试线索](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/docs/gdb-phases.md)；工具操作不熟练时，先回到教程和 C 小例子。
+各关入口函数名是 `phase_01` 至 `phase_06`。导出的汇编适合看清调用、分支和循环的整体结构，在线 GDB 适合确认某一时刻寄存器和内存中的值；两种方式在 [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md) 中都有完整示范。工具操作不熟练时，先回到 tutor 教学和 C 小例子。
 
 ### 本地测试
 
@@ -223,7 +222,7 @@ Public tests: 0/10
 make test
 ```
 
-六关全部公开测试通过时显示 `Public tests: 60/60`，随后检查隐藏关：还没有实现 `solve_secret` 时显示 `Secret phase: not attempted`，不算失败。`make test` 不包含教程。
+六关全部公开测试通过时显示 `Public tests: 60/60`，随后检查隐藏关：还没有实现 `solve_secret` 时显示 `Secret phase: not attempted`，不算失败。`make test` 不包含 tutor 教学。
 
 公开测试通过后，再选一个没有用于调试、也不在公开列表中的 seed 检查，例如：
 
@@ -235,7 +234,7 @@ make test
 
 ### GitHub Actions 自测
 
-提交并 push 个人 `bomb` 和解法后，仓库中的 `BombLab public tests` 工作流会自动运行。它分别测试正式六关和选做隐藏关，不测试 Phase 0，也不读取 `config.txt`，不需要学号、Secrets 或登录令牌。
+提交并 push 个人 `bomb` 和解法后，仓库中的 `BombLab public tests` 工作流会自动运行。它分别测试正式六关和选做隐藏关，不测试 tutor 教学，也不读取 `config.txt`，不需要学号、Secrets 或登录令牌。
 
 在 GitHub 仓库的 Actions 页面打开本次运行，查看 `Phase 1 public tests` 至 `Phase 6 public tests`。某关失败不会取消其他关，点开任务日志可以查看失败的 seed 和错误类别。
 
@@ -274,7 +273,7 @@ int solve_secret(uint64_t challenge, uint64_t context, char *out, size_t cap);
 >
 > 隐藏关的 challenge 不会打印，可以在 `secret_gate` 入口按调用约定查看参数寄存器。
 
-> **可参考的仓库材料。** [`teaching/07_stack_copy.c`](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/07_stack_copy.c) 演示同一个结构体内的相邻字段覆盖，可以先对照它观察局部对象的布局；[各关调试线索](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/docs/gdb-phases.md) 末尾的“隐藏关（选做）”给出了观察方向。
+> **可参考的仓库材料。** [`teaching/07_stack_copy.c`](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/07_stack_copy.c) 演示同一个结构体内的相邻字段覆盖，可以先对照它观察局部对象的布局。
 
 完成后验证：
 
@@ -339,7 +338,7 @@ make
 | `report.md` 或 `report.pdf` | 实验报告，任选一种格式，不提交 `.doc` 或 `.docx` |
 | `bomb` | 个人炸弹，用于 Actions 公开自测 |
 
-姓名、学号不作报告或提交格式要求，可自行选择是否填写。`config.txt` 和 `package.json` 不要求提交。不要提交解法可执行文件 `defuser`、教程编译产物、整份反汇编或调试日志。
+姓名、学号不作报告或提交格式要求，可自行选择是否填写。`config.txt` 和 `package.json` 不要求提交。不要提交解法可执行文件 `defuser`、tutor 教学的编译产物、整份反汇编或调试日志。
 
 助教评分不使用上传的 `bomb`，缺少它不扣提交格式分，但 Actions 无法运行。请不要把 `password.txt` 当成解法提交。
 
@@ -356,7 +355,7 @@ Markdown 报告中的图片放在仓库的 `images/` 或 `assets/` 目录，使�
 
 ### 上传仓库链接和代码
 
-**先在 E-Learning 本实验作业页面提交自己的 GitHub 仓库链接。** 使用课程登记的 GitHub 账号；账号有变更时先联系助教更新，不能通过修改 `config.txt` 更改成绩归属。确保助教有权限访问仓库。
+**先在 E-Learning 本实验作业页面提交自己的 GitHub 仓库链接。** 确保仓库公开。
 
 然后在仓库根目录执行。以下使用 PDF 报告，Markdown 报告将 `report.pdf` 换成 `report.md`，并添加引用的图片目录：
 
@@ -414,8 +413,7 @@ git push -f origin final
 ## 参考资料与问题反馈
 
 - CSAPP 第三章、课程讲义中的 x86-64 汇编与过程调用内容。
-- [Phase 0 调试教程](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md)。
-- [各关调试线索](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/docs/gdb-phases.md)。
+- [tutor 教学](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/tutor/README.md)。
 - [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)。
 - GDB 中的 `help`，以及 `man gdb`、`man objdump`。
 
