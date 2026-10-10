@@ -59,4 +59,4 @@ jobs:
       - name: Build solution
         run: make
       - name: Run secret public tests
-        run: python3 secret_public_test.py
+        run: python3 public_test.py --secret

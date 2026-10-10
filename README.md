@@ -95,8 +95,7 @@ git add -f bomb
 | `teaching/` | [配套 C 小例子](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/teaching/README.md)，用于练习六关涉及的知识点 |
 | `docs/gdb-phases.md` | [各关调试线索](https://github.com/ICS-26Fall-FDU/BombLab/blob/main/docs/gdb-phases.md) |
 | `defuser_main.c`、`challenge.c`、`cli.c` 等 | 公共驱动程序，不需要修改 |
-| `public_test.py`、`tests/public.json` | 正式六关的公开测试程序和 seed |
-| `secret_public_test.py` | 选做隐藏关的公开测试程序 |
+| `public_test.py`、`tests/public.json` | 公开测试程序和 seed，包括正式六关和选做隐藏关 |
 | `.github/workflows/public-tests.yml` | GitHub Actions 公开自测工作流 |
 
 ## 实验要求
@@ -224,7 +223,7 @@ Public tests: 0/10
 make test
 ```
 
-六关全部公开测试通过时，最后显示 `Public tests: 60/60`。`make test` 不包含教程和隐藏关。
+六关全部公开测试通过时显示 `Public tests: 60/60`，随后检查隐藏关：还没有实现 `solve_secret` 时显示 `Secret phase: not attempted`，不算失败。`make test` 不包含教程。
 
 公开测试通过后，再选一个没有用于调试、也不在公开列表中的 seed 检查，例如：
 
@@ -240,7 +239,7 @@ make test
 
 在 GitHub 仓库的 Actions 页面打开本次运行，查看 `Phase 1 public tests` 至 `Phase 6 public tests`。某关失败不会取消其他关，点开任务日志可以查看失败的 seed 和错误类别。
 
-> **隐藏关是选做题。** 没有完成隐藏关时，`Secret phase public tests (optional)` 会失败，整个工作流也可能显示红色。这不代表正式六关没通过，更不代表正式六关会被扣分，请分别查看六个正式关卡的结果。
+> **隐藏关是选做题。** 没有实现 `solve_secret` 时，`Secret phase public tests (optional)` 显示 `not attempted` 并通过；实现后才逐个 seed 检查。这一项失败只表示隐藏关有问题，不代表正式六关没通过，也不会让正式六关扣分，请分别查看六个正式关卡的结果。
 
 Actions 只检查公开测试，不是最终成绩。助教会使用保存的个人炸弹重新编译解法，运行隐藏测试；报告另行人工批阅。
 
@@ -282,10 +281,10 @@ int solve_secret(uint64_t challenge, uint64_t context, char *out, size_t cap);
 ```sh
 make
 { ./defuser --seed 42; ./defuser --secret --seed 42; } | ./bomb --seed 42
-python3 secret_public_test.py
+python3 public_test.py --secret
 ```
 
-只有输出 `Secret phase defused.` 才算隐藏关通过；公开测试全部通过时显示 `Secret public tests: 10/10 (optional)`。
+只有输出 `Secret phase defused.` 才算隐藏关通过；公开测试全部通过时显示 `Secret public tests: 10/10 (optional)`。`make test` 在六关全部通过后也会自动做这项检查。
 
 公开测试和评分都要求同一个 seed 下的前六关正确。`prerequisite_` 开头的错误表示前六关在该 seed 下尚未通过，不是隐藏关答案本身的错误；评分时某个隐藏 seed 下任一正式关卡出错，该 seed 的隐藏关也不得分。
 
