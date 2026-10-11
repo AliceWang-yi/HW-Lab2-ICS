@@ -15,6 +15,7 @@ concurrency:
 jobs:
   phases:
     name: Phase ${{ matrix.phase }} public tests
+    if: github.repository != 'ICS-26Fall-FDU/BombLab'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
@@ -29,7 +30,7 @@ jobs:
       - name: Check personal bomb
         run: |
           if [ ! -f bomb ]; then
-            echo "::error::Personal bomb is missing. Download it locally, then commit it with: git add -f bomb"
+            echo "::error::Personal bomb is missing. Run make bomb locally, then git add -f bomb, commit and push."
             exit 1
           fi
           chmod +x bomb
@@ -42,6 +43,7 @@ jobs:
 
   secret:
     name: Secret phase public tests (optional)
+    if: github.repository != 'ICS-26Fall-FDU/BombLab'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -52,7 +54,7 @@ jobs:
       - name: Check personal bomb
         run: |
           if [ ! -f bomb ]; then
-            echo "::error::Personal bomb is missing. Download it locally, then commit it with: git add -f bomb"
+            echo "::error::Personal bomb is missing. Run make bomb locally, then git add -f bomb, commit and push."
             exit 1
           fi
           chmod +x bomb
