@@ -14,7 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-RELEASE_BASE = "https://github.com/ICS-26Fall-FDU/BombLab/releases/download/bombs"
+RELEASE_BASE = "https://github.com/ICS-26Fall-FDU/BombLab/releases/download/bombs-2026fall-v1.1"
 MEMBERS = ("bomb", "package.json")
 ROOT = Path(__file__).resolve().parent
 DOWNLOAD_TIMEOUT = 15

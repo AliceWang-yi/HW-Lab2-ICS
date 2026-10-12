@@ -31,7 +31,7 @@ int solve_phase_1(uint64_t challenge, char *out, size_t cap) {
 
 - 输入只有一个：`challenge`，一个 64 位数，就是这一关的题目，每次以不同种子运行都会不同。
 - 你的任务：完成根据 `challenge` 计算关卡口令（几个由 `challenge` 确定的整数）并写进 `values` 的流程，并把 `count` 赋值为此关口令整数的数量。
-- `count` 不为 0 时，代表已完成此关卡，否则测试会显示 not attempted。
+- `count` 是本关口令中的整数个数；未完成的求解函数返回非 0 时，公开测试会显示 `FAIL (solver_error)`。
 
 **一些提示：**
 
@@ -56,6 +56,12 @@ make
 ./defuser --seed 42 --phase 1 | ./bomb --seed 42 --phase 1   # 出现 Phase 1 defused. 就对了
 python3 public_test.py
 ```
+
+**已领取炸弹的同学：**
+
+2026 年 10 月 12 日的修订只更正 `bomb --help`，并让 Honor 跳过空行及只含空白字符的行；题目参数、答案和评分规则不变。已领取的炸弹仍可继续使用，不要求重新领取或重做题目。
+
+如果需要新版，可从[最新正式 Release](https://github.com/ICS-26Fall-FDU/BombLab/releases/latest) 下载自己的压缩包。在 `config.txt` 中填写自己的学号，再用 `python3 fetch_bomb.py --file "下载的压缩包路径"` 导入。程序只替换 `bomb` 和 `package.json`，不会覆盖 `defuser.c`；如需更新 Actions 使用的炸弹，重新执行 `git add -f bomb` 并提交、push。已有 `bomb` 时，`make bomb` 不会主动更新。
 
 ## 实验报告要求
 
