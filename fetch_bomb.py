@@ -40,7 +40,8 @@ def read_student_id():
             values[key] = value
     student_id = values.get("student_id", "")
     if not re.fullmatch(r"[A-Za-z0-9]{11}", student_id):
-        fail("请先在 config.txt 中填写 11 位学号（数字或英文字母），例如 student_id = 2580XH10083")
+        fail("请先在 config.txt 中填写你自己的 11 位学号（数字或英文字母），"
+             "替换 student_id = FILL_IN_STUDENT_ID 中的占位符。")
     return student_id
 
 
