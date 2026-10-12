@@ -42,7 +42,7 @@ jobs:
         run: python3 public_test.py --phase "$PHASE"
 
   secret:
-    name: Secret phase public tests (optional)
+    name: Honor public tests
     if: github.repository != 'ICS-26Fall-FDU/BombLab'
     runs-on: ubuntu-24.04
     timeout-minutes: 10

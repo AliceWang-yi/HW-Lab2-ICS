@@ -1,4 +1,4 @@
-"""Public self-checks: the six phases, then the optional secret phase once attempted."""
+"""Public self-checks: the six phases and the required Honor phase."""
 
 import argparse
 import json
@@ -56,19 +56,12 @@ def check_seed(root, seed):
 
 
 def check_secret(root, seeds):
-    """List per-seed results only after solve_secret has produced an answer."""
+    """Report every Honor seed; unfinished solutions do not pass."""
     errors = [check_seed(root, seed) for seed in seeds]
-    prerequisite = [error is not None and error.startswith("prerequisite_") for error in errors]
-    if all(prerequisite):
-        print("Secret phase: skipped, the six phases must pass first (optional)")
-        return True
-    if all(skip or error == "solver_error" for skip, error in zip(prerequisite, errors)):
-        print("Secret phase: not attempted, solve_secret returned non-zero (optional)")
-        return True
     for seed, error in zip(seeds, errors):
         print(f"Secret seed {seed}: {'PASS' if error is None else 'FAIL (' + error + ')'}")
     passed = errors.count(None)
-    print(f"Secret public tests: {passed}/{len(seeds)} (optional)")
+    print(f"Secret public tests: {passed}/{len(seeds)}")
     return passed == len(seeds)
 
 
@@ -76,7 +69,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run reproducible public checks")
     selected = parser.add_mutually_exclusive_group()
     selected.add_argument("--phase", type=int, choices=range(7))
-    selected.add_argument("--secret", action="store_true", help="check only the optional secret phase")
+    selected.add_argument("--secret", action="store_true", help="check only the Honor phase")
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
     if args.secret:
@@ -108,7 +101,7 @@ def main():
     if args.phase is not None:
         return 0 if passed == total else 1
     if passed != total:
-        print("Secret phase: skipped, the six phases must pass first (optional)")
+        print("Secret phase: skipped, the six phases must pass first")
         return 1
     return 0 if check_secret(root, cases["seeds"]) else 1
 

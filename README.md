@@ -4,9 +4,9 @@
 
 ## 提交物说明
 
-代码方面**只需要改 `defuser.c` 文件。** 其他文件（`defuser.h`、驱动程序、测试程序、`bomb`）都不要动。实验报告内容另外计分。
+代码方面**只需要改 `defuser.c` 文件。** 其他文件（`defuser.h`、驱动程序、测试程序、`bomb`）都不要动。实验报告必交，但不单独计分。
 
-实验总分共 120 分，前六个关每完成一个计 18 分，完成隐藏关计 10 分。按时提交包含正确格式的实验报告且未修改 `defuser.c` 外工作流文件的仓库，可获得 2 分提交格式分。
+实验总分共 120 分：前六关各 18 分，共 108 分；Honor（必做）10 分；提交格式 2 分。各关按隐藏测试通过比例计分，Honor 不是额外加分项。按时提交包含正确格式的实验报告且未修改 `defuser.c` 外工作流文件的仓库，可获得 2 分提交格式分。
 
 | 关卡 | 主要知识点 |
 | --- | --- |
@@ -16,7 +16,7 @@
 | 第 4 关 | 递归调用与返回过程 |
 | 第 5 关 | 结构体布局、指针、链表遍历 |
 | 第 6 关 | 函数指针表与间接调用 |
-| 隐藏关 | （保密） |
+| Honor（必做） | （保密） |
 
 ## `defuser.c` 说明
 
@@ -43,11 +43,11 @@ int solve_phase_1(uint64_t challenge, char *out, size_t cap) {
   - 想单独调某一关，用 `./defuser --seed 42 --phase 5`，前面没做的关不会挡路。
   - 不要用 `./defuser --seed 42 | ./bomb --seed 42` 去试后面的关，前面的 TODO 一挡就什么都看不到。
 
-**Secret 关 (Honor)：**
+**Secret 关 (Honor，必做)：**
 
-- `solve_secret(challenge, context, out, cap)` 
+- `solve_secret(challenge, context, out, cap)`
 - 输入多了 `context` 和 `cap`。 `context` 和 `challenge` 同时用于计算输出； `cap` 则为程序设定好的缓冲区大小。
-- 你需要通过 `challenge` 和 `context` 计算出 `out` 输出的东西。输出格式则为不限于整数的一行文本。做完后，需把返回值改成 0；不做就一直返回 1，公开测试会显示此阶段 not attempted 并通过，不会影响其他六关的分数。
+- 你需要通过 `challenge` 和 `context` 计算出 `out` 输出的东西。输出格式则为不限于整数的一行文本。做完后，需把返回值改成 0；尚未实现时，Honor 公开测试显示 `FAIL (solver_error)` 并返回失败，不会影响其他六关各自的得分。
 
 **本地自测：**
 
