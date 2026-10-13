@@ -6,8 +6,8 @@
 #define MAX_FIELDS 8
 
 /*
- * 把 values 中的 count 个整数写成一行“空格分隔的无符号十进制整数”，存入 out。
- * 成功返回 0；count 为 0（还没有实现）、snprintf 出错或结果被截断时返回非零。
+ * �� values �е� count ������д��һ�С��ո�ָ����޷���ʮ���������������� out��
+ * �ɹ����� 0��count Ϊ 0����û��ʵ�֣���snprintf �����������ض�ʱ���ط��㡣
  */
 static int write_answer(char *out, size_t cap, const uint32_t *values, size_t count) {
     size_t used = 0;
@@ -22,26 +22,20 @@ static int write_answer(char *out, size_t cap, const uint32_t *values, size_t co
 int solve_phase_1(uint64_t challenge, char *out, size_t cap) {
     uint32_t values[MAX_FIELDS] = {0};
     size_t count = 1;
-
     uint32_t a = (uint32_t)challenge;
     uint32_t b = (uint32_t)(challenge >> 32);
     uint64_t c = challenge >> 16;
-
     uint32_t step0 = (b + 0x8b9d) ^ a;
     uint32_t step1 = (b + c * 4) ^ 0x7cc4;
     uint32_t answer = ((step1 * 5 + a) ^ 0xf35c) ^ step0;
-
     values[0] = answer;
-
     return write_answer(out, cap, values, count);
 }
 
 int solve_phase_2(uint64_t challenge, char *out, size_t cap) {
     uint32_t values[MAX_FIELDS] = {0};
     size_t count = 6;
-
     values[0] = ((challenge >> 32) & 0x3f) + 12;
-
     for (uint32_t i = 1; i < 6; i++) {
         uint32_t shift = 16 + i * 4;
         uint32_t v = ((challenge >> shift) & 0x3f) + i;
@@ -105,26 +99,18 @@ int solve_phase_3(uint64_t challenge, char *out, size_t cap) {
 
     return write_answer(out, cap, values, count);
 }
-static uint32_t solve_p4_walk(uint32_t target,
-                              uint32_t low,
-                              uint32_t high,
-                              uint32_t key) {
+static uint32_t solve_p4_walk(uint32_t target,uint32_t low,uint32_t high,uint32_t key) {
     uint32_t mid = low + ((high - low) >> 1);
 
-    if (mid == target) {
-        return (mid + 0x43u) ^ key;
-    }
+    if (mid == target) {return (mid + 0x43u) ^ key;}
 
     uint32_t mix = mid + key;
 
     if (target < mid) {
-        uint32_t result =
-            solve_p4_walk(target, low, mid - 1, key);
+        uint32_t result =solve_p4_walk(target, low, mid - 1, key);
         return ((result * 5u) ^ mix) ^ 0x04u;
     }
-
-    uint32_t result =
-        solve_p4_walk(target, mid + 1, high, key);
+    uint32_t result =solve_p4_walk(target, mid + 1, high, key);
     return ((result * 5u) ^ mix) ^ 0x1fu;
 }
 
@@ -133,9 +119,7 @@ int solve_phase_4(uint64_t challenge, char *out, size_t cap) {
     size_t count = 1;
 
     uint32_t target = (uint32_t)challenge & 0x7fu;
-    uint32_t key =
-        (uint32_t)(challenge >> 7) ^
-        (uint32_t)(challenge >> 32);
+    uint32_t key =(uint32_t)(challenge >> 7) ^(uint32_t)(challenge >> 32);
 
     values[0] = solve_p4_walk(target, 0, 0x7f, key);
 
@@ -159,10 +143,7 @@ int solve_phase_5(uint64_t challenge, char *out, size_t cap) {
     uint32_t start = (uint32_t)challenge & 7u;
     uint32_t steps = ((uint32_t)(challenge >> 3) & 3u) + 1u;
 
-    uint32_t hash =
-        (uint32_t)(challenge >> 6) ^
-        (uint32_t)(challenge >> 32) ^
-        0x4067u;
+    uint32_t hash =(uint32_t)(challenge >> 6) ^(uint32_t)(challenge >> 32) ^0x4067u;
 
     uint32_t position = start;
 
@@ -204,8 +185,7 @@ int solve_phase_6(uint64_t challenge, char *out, size_t cap) {
     uint32_t values[MAX_FIELDS] = {0};
     size_t count = 1;
     uint32_t x =
-        (uint32_t)(challenge >> 6) ^
-        (uint32_t)(challenge >> 32);
+        (uint32_t)(challenge >> 6) ^(uint32_t)(challenge >> 32);
     uint32_t first_index =
         (uint32_t)challenge & 7u;
     uint32_t second_index =
@@ -218,39 +198,15 @@ int solve_phase_6(uint64_t challenge, char *out, size_t cap) {
     return write_answer(out, cap, values, count);
 }
 
-int solve_secret(uint64_t challenge,
-                 uint64_t context,
-                 char *out,
-                 size_t cap) {
+int solve_secret(uint64_t challenge,uint64_t context,char *out,size_t cap) {
     uint32_t selector = (uint32_t)context & 3u;
-
-    uint32_t challenge_fold =
-        (uint32_t)challenge ^
-        (uint32_t)(challenge >> 32);
-
-    uint32_t context_fold =
-        (uint32_t)context ^
-        (uint32_t)(context >> 32);
-
-    uint32_t argument =
-        challenge_fold ^ context_fold;
-
-    uint32_t mixed =
-        ((argument >> 1) ^ 0xcfb2u) +
-        (argument ^ 0x12fu);
-    uint32_t second =
-        mixed ^
-        (selector * 0x12fu) ^
-        (uint32_t)(context >> 16);
-    uint32_t third =
-        second ^
-        (context_fold +
-         selector +
-         0xcfb2u +
-         (challenge_fold >> 1));
-    int written = snprintf(
-        out,
-        cap,
+    uint32_t challenge_fold =(uint32_t)challenge ^(uint32_t)(challenge >> 32);
+    uint32_t context_fold =(uint32_t)context ^(uint32_t)(context >> 32);
+    uint32_t argument =challenge_fold ^ context_fold;
+    uint32_t mixed =((argument >> 1) ^ 0xcfb2u) +(argument ^ 0x12fu);
+    uint32_t second =mixed ^(selector * 0x12fu) ^(uint32_t)(context >> 16);
+    uint32_t third =second ^(context_fold +selector +0xcfb2u +(challenge_fold >> 1));
+    int written = snprintf(out,cap,
         "AAAAAAAAAAAAAAAA"
         "AAAAAAAAAAAAAAAA"
         "OPEN %" PRIu32 " %" PRIu32 " %" PRIu32,
@@ -263,3 +219,4 @@ int solve_secret(uint64_t challenge,
     }
     return 0;
 }
+
