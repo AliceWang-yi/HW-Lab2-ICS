@@ -14,7 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-RELEASE_BASE = "https://github.com/ICS-26Fall-FDU/BombLab/releases/download/bombs-2026fall-v1.1"
+RELEASE_BASE = "https://github.com/ICS-26Fall-FDU/BombLab/releases/download/bombs-2026fall-v1.2"
 MEMBERS = ("bomb", "package.json")
 ROOT = Path(__file__).resolve().parent
 DOWNLOAD_TIMEOUT = 15
@@ -43,6 +43,10 @@ def read_student_id():
         fail("请先在 config.txt 中填写你自己的 11 位学号（数字或英文字母），"
              "替换 student_id = FILL_IN_STUDENT_ID 中的占位符。")
     return student_id
+
+
+def download_id(student_id):
+    return hashlib.sha256(f"bomblab-download-v1:{student_id}".encode("ascii")).hexdigest()
 
 
 def missing(error):
@@ -163,10 +167,19 @@ class Downloader:
 
 def main():
     parser = argparse.ArgumentParser(description="下载并解包个人 bomb")
-    parser.add_argument("--file", type=Path, help="已经手动下载的 bomb-<学号>.tar.gz")
+    selected = parser.add_mutually_exclusive_group()
+    selected.add_argument("--file", type=Path, help="已经手动下载的个人炸弹压缩包")
+    selected.add_argument("--print-url", action="store_true", help="显示自己的附件链接，供浏览器下载")
     args = parser.parse_args()
     student_id = read_student_id()
-    name = f"bomb-{student_id}.tar.gz"
+    identifier = download_id(student_id)
+    name = f"bomb-{identifier}.tar.gz"
+
+    if args.print_url:
+        if "@" in RELEASE_BASE:
+            fail("这份 fetch_bomb.py 还没有配置下载地址，请从课程模板仓库获取")
+        print(f"{RELEASE_BASE}/{name}")
+        return
 
     if args.file:
         data, sums = args.file.read_bytes(), None
@@ -193,15 +206,21 @@ def main():
                 fail(f"压缩包中的 {member} 不是普通文件")
             contents[member] = archive.extractfile(info).read()
     package = json.loads(contents["package.json"])
-    if package.get("student_id") != student_id:
-        fail(f"压缩包属于学号 {package.get('student_id')}，与 config.txt 中的 {student_id} 不一致")
+    if not isinstance(package, dict):
+        fail("压缩包中的 package.json 无效")
+    legacy_import = args.file is not None and package.get("student_id") == student_id
+    if package.get("download_id") != identifier and not legacy_import:
+        fail("压缩包与 config.txt 中的学号不一致，请下载自己的附件")
+    files = package.get("files")
+    if not isinstance(files, dict) or files.get("bomb") != hashlib.sha256(contents["bomb"]).hexdigest():
+        fail("压缩包中的 bomb 校验和不符，请重新下载")
 
     for member, payload in contents.items():
         target = ROOT / member
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(payload)
     (ROOT / "bomb").chmod(0o755)
-    print(f"已获得学号 {student_id} 的 bomb（package {package['package_id']}）。")
+    print(f"已领取个人 bomb（package {package['package_id']}）。")
     print("下一步：make；tutor 教学在 tutor/，可运行 make test-tutor")
 
 

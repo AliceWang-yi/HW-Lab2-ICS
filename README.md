@@ -61,7 +61,9 @@ python3 public_test.py
 
 2026 年 10 月 12 日的修订只更正 `bomb --help`，并让 Honor 跳过空行及只含空白字符的行；题目参数、答案和评分规则不变。已领取的炸弹仍可继续使用，不要求重新领取或重做题目。
 
-如果需要新版，可从[最新正式 Release](https://github.com/ICS-26Fall-FDU/BombLab/releases/latest) 下载自己的压缩包。在 `config.txt` 中填写自己的学号，再用 `python3 fetch_bomb.py --file "下载的压缩包路径"` 导入。程序只替换 `bomb` 和 `package.json`，不会覆盖 `defuser.c`；如需更新 Actions 使用的炸弹，重新执行 `git add -f bomb` 并提交、push。已有 `bomb` 时，`make bomb` 不会主动更新。
+已有炸弹可以继续使用，不需要更新。重新领取时，请使用当前模板的 `fetch_bomb.py`；旧模板可从[最新正式 Release](https://github.com/ICS-26Fall-FDU/BombLab/releases/latest) 下载同名脚本，只替换这个文件，不要覆盖解法或报告。在 `config.txt` 中填写自己的学号，运行 `python3 fetch_bomb.py` 即可领取。
+
+网络下载失败时，运行 `python3 fetch_bomb.py --print-url`，在浏览器中打开输出的链接下载，再用 `python3 fetch_bomb.py --file "下载的压缩包路径"` 导入。程序只替换 `bomb` 和 `package.json`，不会覆盖 `defuser.c`；如需更新 Actions 使用的炸弹，重新执行 `git add -f bomb` 并提交、push。已有 `bomb` 时，`make bomb` 不会主动更新。
 
 ## 实验报告要求
 
